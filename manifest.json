@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Instant Page Highlighter",
+  "version": "1.0.0",
+  "description": "Toggle highlight mode and turn text selections into saved highlights instantly.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Toggle Instant Highlighter"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
