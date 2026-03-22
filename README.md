@@ -30,7 +30,7 @@ When highlight mode is enabled, text selection becomes the trigger. That is the 
 
 ## Demo Behavior
 
-![Demo](image.png)
+![Demo](./assets/instant-page-highlighter-demo.gif)
 
 1. Click the extension icon to enable highlight mode
 2. Select any text on a webpage
