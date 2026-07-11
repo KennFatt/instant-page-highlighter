@@ -2,7 +2,7 @@
 // @name         Instant Page Highlighter
 // @namespace    https://github.com/KennFatt/instant-page-highlighter
 // @version      1.1.0
-// @description  Highlight text instantly on selection. Always-on.
+// @description  Highlight selected text. Toggle on/off with a floating button. Pen/stylus hover preview included.
 // @author       KennFatt
 // @match        *://*/*
 // @grant        GM.getValue
