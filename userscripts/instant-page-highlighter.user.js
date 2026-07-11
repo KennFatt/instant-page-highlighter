@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Instant Page Highlighter
 // @namespace    https://github.com/KennFatt/instant-page-highlighter
-// @version      1.0.0
-// @description  Highlight text instantly on selection. Always-on.
+// @version      1.1.0
+// @description  Highlight selected text. Toggle on/off with a floating button. Pen/stylus hover preview included.
 // @author       KennFatt
 // @match        *://*/*
 // @grant        GM.getValue
@@ -20,12 +20,13 @@
     TAP_DELAY_MS: 350,
     CONFIRM_TIMEOUT_MS: 2500,
     SELECTION_DEBOUNCE_MS: 200,
+    HOVER_DEBOUNCE_MS: 30,
     TRUNCATE_LIMIT: 100,
   });
 
   let lastTap = { id: null, time: 0 };
   let selectionDebounce = null;
-  let highlightingEnabled = true;
+  let highlightingEnabled = false;
 
   const pageKey = CONFIG.STORAGE_PREFIX + location.origin + location.pathname + location.search;
 
@@ -46,11 +47,18 @@
 
     updateClearButton();
 
+    createHoverIndicator();
+    document.getElementById('ih-toggle').classList.add('off');
+
     document.addEventListener('mouseup', onSelectionTrigger, true);
     document.addEventListener('keyup', onSelectionTrigger, true);
     document.addEventListener('touchend', onTouchEnd, true);
     document.addEventListener('dblclick', onDoubleClick, true);
     document.addEventListener('selectionchange', onSelectionChange, true);
+    document.addEventListener('pointermove', onPointerMove, true);
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('pointerleave', onPointerLeave, true);
+    document.addEventListener('scroll', hideHoverIndicator, { passive: true, capture: true });
   }
 
   function injectStyles() {
@@ -73,6 +81,23 @@
       CONFIG.HIGHLIGHT_CLASS +
       ':hover {' +
       '  box-shadow: 0 0 0 1px color-mix(in srgb, var(--instant-highlight-bg, #b9f6b3) 84%, #000 20%);' +
+      '}' +
+      '#ih-hover-dot {' +
+      '  position: fixed;' +
+      '  width: 14px;' +
+      '  height: 14px;' +
+      '  border-radius: 50%;' +
+      '  background: var(--instant-highlight-bg, #b9f6b3);' +
+      '  opacity: 0;' +
+      '  pointer-events: none;' +
+      '  z-index: 2147483646;' +
+      '  transform: translate(-50%, -50%);' +
+      '  box-shadow: 0 0 10px 3px rgba(185, 246, 179, 0.30);' +
+      '  transition: opacity 140ms ease;' +
+      '  will-change: left, top, opacity;' +
+      '}' +
+      '#ih-hover-dot.ih-hover-visible {' +
+      '  opacity: 0.80;' +
       '}';
     document.documentElement.appendChild(style);
   }
@@ -688,6 +713,9 @@
   function toggleHighlighting() {
     highlightingEnabled = !highlightingEnabled;
     document.getElementById('ih-toggle').classList.toggle('off', !highlightingEnabled);
+    if (!highlightingEnabled) {
+      hideHoverIndicator();
+    }
   }
 
   function updateClearButton() {
@@ -863,5 +891,55 @@
   function channelLuminance(channel) {
     const normalized = channel / 255;
     return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
+  }
+
+  let hoverIndicator = null;
+  let hoverDebounceTimer = null;
+  let pendingHoverPosition = null;
+
+  function createHoverIndicator() {
+    hoverIndicator = document.createElement('div');
+    hoverIndicator.id = 'ih-hover-dot';
+    document.body.appendChild(hoverIndicator);
+  }
+
+  function onPointerMove(event) {
+    if (!highlightingEnabled) return;
+    if (event.pointerType !== 'pen') return;
+    if (event.pressure > 0) return;
+
+    pendingHoverPosition = { x: event.clientX, y: event.clientY };
+
+    if (hoverDebounceTimer) return;
+
+    hoverDebounceTimer = globalThis.setTimeout(function () {
+      hoverDebounceTimer = null;
+      if (!pendingHoverPosition) return;
+      updateHoverIndicator(pendingHoverPosition.x, pendingHoverPosition.y);
+      pendingHoverPosition = null;
+    }, CONFIG.HOVER_DEBOUNCE_MS);
+  }
+
+  function updateHoverIndicator(x, y) {
+    if (!hoverIndicator) return;
+    hoverIndicator.style.left = x + 'px';
+    hoverIndicator.style.top = y + 'px';
+    hoverIndicator.classList.add('ih-hover-visible');
+  }
+
+  function hideHoverIndicator() {
+    if (!hoverIndicator) return;
+    hoverIndicator.classList.remove('ih-hover-visible');
+    pendingHoverPosition = null;
+  }
+
+  function onPointerDown(event) {
+    if (event.pointerType !== 'pen') return;
+    hideHoverIndicator();
+  }
+
+  function onPointerLeave(event) {
+    if (event.pointerType !== 'pen') return;
+    hideHoverIndicator();
   }
 })();
