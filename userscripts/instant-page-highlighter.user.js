@@ -495,6 +495,7 @@
       '  -webkit-user-select: none;' +
       '  user-select: none;' +
       '  gap: 8px;' +
+      '  pointer-events: none;' +
       '}' +
       '#instant-highlight-panel {' +
       '  display: flex;' +
@@ -518,6 +519,7 @@
       '  backdrop-filter: blur(4px);' +
       '  box-shadow: 0 1px 3px rgba(0,0,0,0.06);' +
       '  transition: opacity 120ms ease, background 120ms ease, color 120ms ease;' +
+      '  pointer-events: auto;' +
       '}' +
       '#instant-highlight-panel button:hover {' +
       '  opacity: 1;' +
